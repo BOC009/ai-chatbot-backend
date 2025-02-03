@@ -10,13 +10,12 @@ load_dotenv()
 
 class AIAssistant:
     def __init__(self):
-        # Using a more reliable model
-        self.api_url = "https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium"
+        # Using GPT-Neo model
+        self.api_url = "https://api-inference.huggingface.co/models/EleutherAI/gpt-neo-2.7B"
         self.headers = {
             "Authorization": f"Bearer {os.getenv('HUGGINGFACE_API_TOKEN')}",
             "Content-Type": "application/json"
         }
-        self.conversation_history = []
 
     async def get_response(self, message: str) -> str:
         try:
@@ -29,27 +28,27 @@ class AIAssistant:
                     json={
                         "inputs": prompt,
                         "parameters": {
-                            "max_length": 150,
+                            "max_length": 100,
                             "temperature": 0.7,
-                            "return_full_text": False
+                            "return_full_text": False,
+                            "do_sample": True
                         }
                     }
                 ) as response:
                     if response.status == 200:
                         result = await response.json()
-                        print("API Response:", result)  # Debug print
-                        return result[0]["generated_text"]
+                        return result[0]["generated_text"].strip()
                     else:
                         error_text = await response.text()
-                        print(f"API Error: Status {response.status}, {error_text}")  # Debug print
+                        print(f"API Error: Status {response.status}, {error_text}")
                         return "I apologize, but I'm having trouble generating a response."
             
         except Exception as e:
-            print(f"Error in get_response: {str(e)}")  # Debug print
+            print(f"Error in get_response: {str(e)}")
             return "I encountered an error. Please try again."
 
     def _format_prompt(self, message: str) -> str:
-        return f"Human: {message}\nAssistant:"
+        return f"Human: {message}\nAssistant: Let me help you with that."
 
 async def get_gpt_response(message: str, context: Optional[str] = None) -> str:
     try:
